@@ -1,0 +1,76 @@
+/*
+Light Intensity Reader with IFTTT Trigger - By Timothy Moore
+------------------------------------------------------------
+
+This .cpp firmware app for tha Particle Argon will read in a light
+intensity value, then determine whether the light is rising or 
+falling past a level, akin to the sun rising or falling. This 
+is designed to be linked to an IFTTT account, the publish call 
+will trigger an action that sends an email every time the light 
+changes level.
+------------------------------------------------------------
+*/
+
+
+//  Pin setup
+int led = D7; 
+int photodiode = A0;
+
+//  Variable to store photodiode reading
+int analogValue;
+
+//  Value for current reading
+int currentVal = 0;
+//  Value for previous reading
+int previousVal = 0;
+
+void setup() 
+{
+    //  Digital pin D7 (inbuilt LED) outputs light when sunlight is low
+    pinMode(led, OUTPUT);
+    
+    //  Analog pin A0 (photodiode) inputs the light reading measured
+    pinMode(photodiode, INPUT);
+
+}
+
+void loop() 
+{
+    
+    //  read the light level value
+    analogValue = analogRead(photodiode);
+
+    /*  50 is the light level value recorded during heavy cloud coverage 
+    in the middle of the day
+    */
+    if (analogValue <= 50)
+    {
+        currentVal = 0;
+    } 
+    
+    else  
+    {
+        currentVal = 1;
+    }
+    
+    if (currentVal != previousVal) //   If there is change between readings
+    {
+        previousVal = currentVal; //    Preoaration for next loop runthrough
+        
+        if (currentVal == 0) // Light value has gone from high to low
+        {
+            digitalWrite(led, HIGH);
+            Particle.publish("Sunlight", "Sun light is low", 60, PRIVATE);
+        }
+        
+        else // currentVal == 0
+        {
+            digitalWrite(led, LOW);
+            Particle.publish("Sunlight", "Sun light is high", 60, PRIVATE);
+        }
+    }
+
+    delay(30000); //    read again in 30 seconds
+    
+}
+
